@@ -23,8 +23,9 @@ function App() {
     if (user && user.favorites && user.favorites.length > 0) {
       setLoading(true);
       axios
-        .get(`https://restcountries.com/v3.1/alpha?codes=${user.favorites.join(',')}`)
+        .get(`https://restcountries.com/v3.1/alpha?codes=${user.favorites.join(',')}&fields=name,capital,population,flags,region,subregion,languages,currencies,timezones,cca2`)
         .then((response) => {
+          console.log('Favorite Countries:', response.data); // Debug log
           setFavoriteCountries(response.data);
           setLoading(false);
         })

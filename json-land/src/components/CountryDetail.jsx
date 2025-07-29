@@ -11,13 +11,19 @@ function CountryDetail() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!code || code === 'undefined') {
+      setError('Invalid country code.');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     axios
-      .get(`https://restcountries.com/v3.1/alpha/${code}`)
+      .get(`https://restcountries.com/v3.1/alpha/${code}?fields=name,capital,population,flags,region,subregion,languages,currencies,timezones,cca2,maps`)
       .then((response) => {
-        if (response.data && response.data.length > 0) {
-          setCountry(response.data[0]);
+        if (response.data) {
+          setCountry(response.data);
         } else {
           setError('Country data not found.');
         }
@@ -25,7 +31,7 @@ function CountryDetail() {
       })
       .catch((error) => {
         console.error(`Error fetching country detail for ${code}:`, error);
-        setError('Failed to load country details.');
+        setError(`Failed to load country details: ${error.response?.data?.message || error.message}`);
         setLoading(false);
       });
   }, [code]);

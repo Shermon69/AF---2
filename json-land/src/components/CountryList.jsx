@@ -8,16 +8,16 @@ const CountryList = ({ countries }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {countries.map((country) => {
-        const isFavorite = user && user.favorites && Array.isArray(user.favorites) && user.favorites.includes(country.cca3);
+        const isFavorite = user && user.favorites && Array.isArray(user.favorites) && user.favorites.includes(country.cca2);
         return (
           <div
-            key={country.cca3}
+            key={country.cca2} // Use cca2 for unique key
             className="bg-gray-800 p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 relative"
           >
             <span className="absolute top-3 right-3 text-xs font-semibold text-indigo-100 bg-indigo-600/80 px-2 py-1 rounded-full backdrop-blur-sm border border-indigo-400/30 shadow-sm">
-            {country.region}
+              {country.region}
             </span>
-            <Link to={`/country/${country.cca3}`}>
+            <Link to={`/country/${country.cca2}`}>
               <img
                 src={country.flags.png}
                 alt={`${country.name.common} flag`}
@@ -31,8 +31,8 @@ const CountryList = ({ countries }) => {
               <button
                 onClick={() =>
                   isFavorite
-                    ? handleRemoveFavorite(country.cca3)
-                    : handleAddFavorite(country.cca3)
+                    ? handleRemoveFavorite(country.cca2)
+                    : handleAddFavorite(country.cca2)
                 }
                 className={`mt-4 px-4 py-2 rounded-md text-white transition ${
                   isFavorite

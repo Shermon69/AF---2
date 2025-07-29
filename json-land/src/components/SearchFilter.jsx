@@ -15,55 +15,67 @@ function SearchFilter({ setCountries, setLoading, setError }) {
     localStorage.setItem('lastLanguageSearch', languageSearch);
   }, [search, region, languageSearch]);
 
-  // Fetch all countries
-  const fetchAllCountries = useCallback(() => {
+  // Define fields needed for the app
+  const fields = 'name,capital,population,flags,region,subregion,languages,currencies,timezones,cca2';
+
+  // Fetch countries with server-side filtering when possible
+  const fetchAllCountries = useCallback(async () => {
     setLoading(true);
-    setError(null);
-    axios
-      .get('https://restcountries.com/v3.1/all')
-      .then((response) => {
-        let filteredCountries = response.data;
+    setError(null); // Clear error on new search
+    try {
+      let url;
+      // Use server-side filtering for name and region, but not language
+      if (search) {
+        url = `https://restcountries.com/v3.1/name/${encodeURIComponent(search)}?fields=${fields}`;
+      } else if (region) {
+        url = `https://restcountries.com/v3.1/region/${encodeURIComponent(region)}?fields=${fields}`;
+      } else {
+        url = `https://restcountries.com/v3.1/all?fields=${fields}`;
+      }
 
-        // Apply search filter client-side (by country name)
-        if (search) {
-          filteredCountries = filteredCountries.filter((country) =>
-            country.name.common.toLowerCase().includes(search.toLowerCase())
+      const response = await axios.get(url);
+      let filteredCountries = Array.isArray(response.data) ? response.data : [response.data];
+      console.log('API Response:', filteredCountries); // Debug log
+
+      // Apply client-side filtering for language
+      if (languageSearch) {
+        filteredCountries = filteredCountries.filter((country) => {
+          if (!country.languages) return false;
+          const languageNames = Object.values(country.languages);
+          return languageNames.some((lang) =>
+            lang.toLowerCase().includes(languageSearch.toLowerCase())
           );
-        }
+        });
+      }
 
-        // Apply region filter client-side
-        if (region) {
-          filteredCountries = filteredCountries.filter(
-            (country) => country.region === region
-          );
-        }
+      // Apply client-side filtering for search (if not using /name endpoint)
+      if (search && !url.includes('/name/')) {
+        filteredCountries = filteredCountries.filter((country) =>
+          country.name.common.toLowerCase().includes(search.toLowerCase())
+        );
+      }
 
-        // Apply language filter client-side
-        if (languageSearch) {
-          filteredCountries = filteredCountries.filter((country) => {
-            if (!country.languages) return false;
-            const languageNames = Object.values(country.languages);
-            return languageNames.some((lang) =>
-              lang.toLowerCase().includes(languageSearch.toLowerCase())
-            );
-          });
-        }
+      // Apply client-side filtering for region (if not using /region endpoint)
+      if (region && !url.includes('/region/')) {
+        filteredCountries = filteredCountries.filter(
+          (country) => country.region === region
+        );
+      }
 
-        setCountries(filteredCountries);
-        setLoading(false);
-        if (filteredCountries.length === 0) {
-          setError('No countries found matching your criteria.');
-        }
-      })
-      .catch((err) => {
-        console.error('Error fetching all countries:', err);
-        setError('Failed to fetch countries.');
-        setLoading(false);
-        setCountries([]);
-      });
+      setCountries(filteredCountries);
+      setLoading(false);
+      if (filteredCountries.length === 0) {
+        setError('No countries found matching your criteria.');
+      }
+    } catch (err) {
+      console.error('Error fetching countries:', err);
+      setError('Failed to fetch countries.');
+      setLoading(false);
+      setCountries([]);
+    }
   }, [search, region, languageSearch, setCountries, setLoading, setError]);
 
-  // Debounced search handler (inline function)
+  // Debounced search handler
   const debouncedSearch = useCallback(
     debounce(() => fetchAllCountries(), 300),
     [fetchAllCountries]
@@ -72,18 +84,21 @@ function SearchFilter({ setCountries, setLoading, setError }) {
   // Handle search input change
   const handleSearchChange = (value) => {
     setSearch(value);
+    setError(null); // Clear error on input change
     debouncedSearch();
   };
 
-  // Handle region filter change (inline function)
+  // Handle region filter change
   const handleRegionFilter = useCallback((selectedRegion) => {
     setRegion(selectedRegion);
+    setError(null); // Clear error on region change
     debouncedSearch();
   }, [debouncedSearch]);
 
   // Handle language search change
   const handleLanguageSearchChange = (value) => {
     setLanguageSearch(value);
+    setError(null); // Clear error on language change
     debouncedSearch();
   };
 

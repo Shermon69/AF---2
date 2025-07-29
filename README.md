@@ -34,7 +34,7 @@
 - npm 
 
 ### Installation
-git clone <repo-url>
+git clone https://github.com/Shermon69/AF---2.git
 cd json-land
 npm install
 npm start
